@@ -2,16 +2,12 @@ package org.example;
 
 import java.lang.reflect.Member;
 
+
 public class DbLibraryStore implements ILibraryStore {
 
     @Override
     public void addBook(Book newBook) {
         // SQL code here
-    }
-
-    @Override
-    public void addMember(Member newMember) {
-
     }
 
     @Override
