@@ -1,55 +1,30 @@
 package org.example;
 
 import java.util.Scanner;
+
 public class Main {
 
     public static void main(String[] args) {
-
-        //ILibraryStore store = new FileLibraryStore("myfilename.txt");
+        // Create an instance of DbLibraryStore
         ILibraryStore store = new DbLibraryStore();
         LibraryService svc = new LibraryService(store);
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Welcome to the Library System!");
-        System.out.println("Enter your user id:");
-        String userId = scanner.nextLine();
+        // Test adding a book
+        Book newBook = new Book();
+        newBook.ISBN = "1234567890129";
+        newBook.title = "Abbes bok";
+        newBook.author = "Å. Carl Abbe";
+        newBook.year = 2025;
 
-        boolean done = false;
-        int selection = 0;
-        while (!done) {
-            System.out.println("\nMenu:");
-            System.out.println("1. Lend item.");
-            System.out.println("2. Return item.");
-            // And some more menu choices.
-            System.out.println("9. Quit.");
-            System.out.println("Select (1-9):");
-            selection = Integer.parseInt(scanner.nextLine());
+        store.addBook(newBook);
 
-            switch (selection) {
-                case 1: {
-                    System.out.println("Enter book id:");
-                    String bookId = scanner.nextLine();
-                    svc.borrow(bookId, userId);
-                }
-                break;
-
-                case 2: {
-                    // Return an item.
-                }
-                break;
-
-                // More cases here!
-
-                case 9: {
-                    done = true;
-                }
-                break;
-
-                default:
-                    System.out.println(String.format("%d is not valid.", selection));
-            }
+        // Verify the book was added
+        Book retrievedBook = store.getBook("1234567890129");
+        if (retrievedBook != null) {
+            System.out.println("Retrieved Book: " + retrievedBook.title);
+        } else {
+            System.out.println("Book not found.");
         }
-
-        System.out.println("Bye.");
     }
 }
