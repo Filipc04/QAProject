@@ -1,3 +1,4 @@
+package org.example;
 
 public class Member {
     public String firstName;
