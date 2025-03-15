@@ -1,14 +1,13 @@
 package org.example;
 
-
-import java.lang.reflect.Member;
-
 public interface ILibraryStore {
-    public void addBook(Book newBook);
-    public void addMember(Member newMember);
-    public Book getBook(String id);
-    public Member getMember(String id);
-    public boolean isSuspendedMember(String id);
-    public void removeMember(String id);
-    public void suspendMember(String id);
+    void addBook(Book newBook);
+    void addMember(Member newMember);
+    Book getBook(String id);
+    Member getMember(String id);
+    boolean isSuspendedMember(String id);
+    void removeMember(String id);
+    void suspendMember(String id);
+    boolean borrowItem(String itemId, String memberId); // Add this method
+    boolean returnItem(String itemId, String memberId); // Add this method
 }
