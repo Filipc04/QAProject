@@ -5,26 +5,92 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
-        // Create an instance of DbLibraryStore
         ILibraryStore store = new DbLibraryStore();
         LibraryService svc = new LibraryService(store);
         Scanner scanner = new Scanner(System.in);
 
-        // Test adding a book
-        Book newBook = new Book();
-        newBook.ISBN = "1234567890129";
-        newBook.title = "Abbes bok";
-        newBook.author = "Å. Carl Abbe";
-        newBook.year = 2025;
+        System.out.println("Welcome to the Library System!");
 
-        store.addBook(newBook);
+        boolean done = false;
+        while (!done) {
+            System.out.println("\nMain Menu:");
+            System.out.println("1. Register as a new member.");
+            System.out.println("2. Lend item.");
+            System.out.println("3. Return item.");
+            System.out.println("4. Unsubscribe/Delete account.");
+            System.out.println("5. Suspend member.");
+            System.out.println("9. Quit.");
+            System.out.println("Select (1-9):");
+            int selection = Integer.parseInt(scanner.nextLine());
 
-        // Verify the book was added
-        Book retrievedBook = store.getBook("1234567890129");
-        if (retrievedBook != null) {
-            System.out.println("Retrieved Book: " + retrievedBook.title);
-        } else {
-            System.out.println("Book not found.");
+            switch (selection) {
+                case 1: {
+                    // Register a new member
+                    System.out.println("Enter your first name:");
+                    String firstName = scanner.nextLine();
+                    System.out.println("Enter your last name:");
+                    String lastName = scanner.nextLine();
+                    System.out.println("Enter your personal number:");
+                    String personalNumber = scanner.nextLine();
+                    System.out.println("Enter your level (1 = Undergraduate, 2 = Postgraduate, 3 = PhD, 4 = Teacher):");
+                    int level = Integer.parseInt(scanner.nextLine());
+
+                    Member newMember = new Member();
+                    newMember.firstName = firstName;
+                    newMember.lastName = lastName;
+                    newMember.personalNumber = personalNumber;
+                    newMember.level = level;
+
+                    svc.registerMember(newMember);
+                }
+                break;
+
+                case 2: {
+                    // Lend an item
+                    System.out.println("Enter your user ID:");
+                    String userId = scanner.nextLine();
+                    System.out.println("Enter book ISBN:");
+                    String bookId = scanner.nextLine();
+                    svc.borrow(bookId, userId);
+                }
+                break;
+
+                case 3: {
+                    // Return an item
+                    System.out.println("Enter your user ID:");
+                    String userId = scanner.nextLine();
+                    System.out.println("Enter book ISBN:");
+                    String bookId = scanner.nextLine();
+                    svc.returnBook(bookId, userId);
+                }
+                break;
+
+                case 4: {
+                    // Unsubscribe/Delete account
+                    System.out.println("Enter your user ID:");
+                    String userId = scanner.nextLine();
+                    svc.deleteMember(userId);
+                }
+                break;
+
+                case 5: {
+                    // Suspend a member
+                    System.out.println("Enter the user ID to suspend:");
+                    String userId = scanner.nextLine();
+                    svc.suspendMember(userId);
+                }
+                break;
+
+                case 9: {
+                    done = true;
+                }
+                break;
+
+                default:
+                    System.out.println(String.format("%d is not a valid option.", selection));
+            }
         }
+
+        System.out.println("Bye.");
     }
 }
