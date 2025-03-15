@@ -11,6 +11,7 @@ public class LibraryService {
         this.store = store;
     }
 
+
     public boolean borrow(String bookId, String memberId) {
         // Check if the member is suspended
         if (store.isSuspendedMember(memberId)) {
@@ -32,7 +33,17 @@ public class LibraryService {
 
         // Borrow the book
         return store.borrowItem(bookId, memberId);
+      
+    private int getMaxBooksForLevel(int level) {
+        switch (level) {
+            case 1: return 3;
+            case 2: return 5;
+            case 3: return 7;
+            case 4: return 10;
+            default: return 0;
+        }
     }
+
 
     public boolean returnBook(String bookId, String memberId) {
         // Return the book

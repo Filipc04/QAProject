@@ -8,7 +8,7 @@ public class Main {
         ILibraryStore store = new DbLibraryStore();
         LibraryService svc = new LibraryService(store);
         Scanner scanner = new Scanner(System.in);
-
+      
         System.out.println("Welcome to the Library System!");
 
         boolean done = false;
@@ -50,8 +50,11 @@ public class Main {
                     System.out.println("Enter your user ID:");
                     String userId = scanner.nextLine();
                     System.out.println("Enter book ISBN:");
+
                     String bookId = scanner.nextLine();
-                    svc.borrow(bookId, userId);
+                    if (svc.borrow(bookId, userId)) {
+                        System.out.println("Boken lånad framgångsrikt!");
+                    }
                 }
                 break;
 
@@ -62,8 +65,7 @@ public class Main {
                     System.out.println("Enter book ISBN:");
                     String bookId = scanner.nextLine();
                     svc.returnBook(bookId, userId);
-                }
-                break;
+
 
                 case 4: {
                     // Unsubscribe/Delete account
@@ -81,16 +83,42 @@ public class Main {
                 }
                 break;
 
-                case 9: {
-                    done = true;
-                }
-                break;
+                    Member newMember = new Member(firstName, id, level) {
+                        @Override
+                        public Class<?> getDeclaringClass() {
+                            return null;
+                        }
+
+
+                        @Override
+                        public String getName() {
+                            return null;
+                        }
+
+                        @Override
+                        public int getModifiers() {
+                            return 0;
+                        }
+
 
                 default:
                     System.out.println(String.format("%d is not a valid option.", selection));
+
+                        @Override
+                        public boolean isSynthetic() {
+                            return false;
+                        }
+                    };
+                    store.addMember(newMember);
+                    System.out.println("Medlem registrerad!");
+                }
+               
+                case 9 -> done = true;
+                default -> System.out.println(selection + " är inte ett giltigt val.");
+
             }
         }
 
-        System.out.println("Bye.");
+        scanner.close();
     }
 }

@@ -1,5 +1,7 @@
 package org.example;
 
+import org.example.Member;
+
 public interface ILibraryStore {
     void addBook(Book newBook);
     void addMember(Member newMember);
