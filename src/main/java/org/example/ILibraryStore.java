@@ -1,7 +1,7 @@
 package org.example;
 
+import org.example.Member;
 
-import java.lang.reflect.Member;
 
 public interface ILibraryStore {
     public void addBook(Book newBook);

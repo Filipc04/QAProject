@@ -5,5 +5,5 @@ public class Book {
     public String title;
     public int year;
 
-    private int availableCopies;
+    public int availableCopies;
 }

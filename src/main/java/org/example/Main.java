@@ -1,55 +1,103 @@
 package org.example;
 
 import java.util.Scanner;
+
 public class Main {
 
     public static void main(String[] args) {
 
-        //ILibraryStore store = new FileLibraryStore("myfilename.txt");
         ILibraryStore store = new DbLibraryStore();
         LibraryService svc = new LibraryService(store);
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Welcome to the Library System!");
-        System.out.println("Enter your user id:");
+        System.out.println("Välkommen till bibliotekssystemet!");
+        System.out.println("Ange ditt användar-ID (fyra siffror):");
         String userId = scanner.nextLine();
 
         boolean done = false;
-        int selection = 0;
         while (!done) {
-            System.out.println("\nMenu:");
-            System.out.println("1. Lend item.");
-            System.out.println("2. Return item.");
-            // And some more menu choices.
-            System.out.println("9. Quit.");
-            System.out.println("Select (1-9):");
-            selection = Integer.parseInt(scanner.nextLine());
+            System.out.println("\nMeny:");
+            System.out.println("1. Låna bok.");
+            System.out.println("2. Returnera bok.");
+            System.out.println("3. Registrera ny medlem.");
+            System.out.println("4. Ta bort medlem.");
+            System.out.println("5. Suspendera medlem.");
+            System.out.println("9. Avsluta.");
+            System.out.print("Välj (1-9): ");
+
+            int selection;
+            try {
+                selection = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Felaktigt val, försök igen.");
+                continue;
+            }
 
             switch (selection) {
-                case 1: {
-                    System.out.println("Enter book id:");
+                case 1 -> {
+                    System.out.println("Ange bokens ISBN:");
                     String bookId = scanner.nextLine();
-                    svc.borrow(bookId, userId);
+                    if (svc.borrow(bookId, userId)) {
+                        System.out.println("Boken lånad framgångsrikt!");
+                    }
                 }
-                break;
-
-                case 2: {
-                    // Return an item.
+                case 2 -> {
+                    System.out.println("Ange bokens ISBN:");
+                    String bookId = scanner.nextLine();
+                    if (svc.returnBook(bookId, userId)) {
+                        System.out.println("Boken returnerad framgångsrikt!");
+                    }
                 }
-                break;
+                case 3 -> {
+                    System.out.println("Ange förnamn:");
+                    String firstName = scanner.nextLine();
+                    System.out.println("Ange ID (4 siffror):");
+                    String id = scanner.nextLine();
+                    System.out.println("Ange medlemsnivå (1=Undergraduate, 2=Postgraduate, 3=PhD, 4=Teacher):");
+                    int level = Integer.parseInt(scanner.nextLine());
 
-                // More cases here!
+                    Member newMember = new Member(firstName, id, level) {
+                        @Override
+                        public Class<?> getDeclaringClass() {
+                            return null;
+                        }
 
-                case 9: {
-                    done = true;
+                        @Override
+                        public String getName() {
+                            return null;
+                        }
+
+                        @Override
+                        public int getModifiers() {
+                            return 0;
+                        }
+
+                        @Override
+                        public boolean isSynthetic() {
+                            return false;
+                        }
+                    };
+                    store.addMember(newMember);
+                    System.out.println("Medlem registrerad!");
                 }
-                break;
-
-                default:
-                    System.out.println(String.format("%d is not valid.", selection));
+                case 4 -> {
+                    System.out.println("Ange ID för medlem som ska tas bort:");
+                    String id = scanner.nextLine();
+                    store.removeMember(id);
+                    System.out.println("Medlem borttagen!");
+                }
+                case 5 -> {
+                    System.out.println("Ange ID för medlem som ska suspenderas:");
+                    String id = scanner.nextLine();
+                    store.suspendMember(id);
+                    System.out.println("Medlem suspenderad!");
+                }
+                case 9 -> done = true;
+                default -> System.out.println(selection + " är inte ett giltigt val.");
             }
         }
 
-        System.out.println("Bye.");
+        System.out.println("Hejdå!");
+        scanner.close();
     }
 }
