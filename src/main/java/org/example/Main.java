@@ -15,15 +15,12 @@ public class Main {
         while (!done) {
             System.out.println("\nMain Menu:");
             System.out.println("1. Register as a new member.");
-            System.out.println("2. Lend item.");
-            System.out.println("3. Return item.");
-            System.out.println("4. Unsubscribe/Delete account.");
-            System.out.println("5. Suspend member.");
-            System.out.println("9. Quit.");
-            System.out.println("Select (1-9):");
-            int selection = Integer.parseInt(scanner.nextLine());
+            System.out.println("2. Login with your ID.");
+            System.out.println("3. Quit.");
+            System.out.println("Select (1-3):");
+            int selection1= Integer.parseInt(scanner.nextLine());
 
-            switch (selection) {
+            switch (selection1){
                 case 1: {
                     // Register a new member
                     System.out.println("Enter your first name:");
@@ -46,51 +43,61 @@ public class Main {
                 break;
 
                 case 2: {
-                    // Lend an item
                     System.out.println("Enter your user ID:");
-                    String userId = scanner.nextLine();
-                    System.out.println("Enter book ISBN:");
-                    String bookId = scanner.nextLine();
-                    svc.borrow(bookId, userId);
+                    String userId = scanner.nextLine();  // Declared once here
+
+                    System.out.println("1. Lend item.");
+                    System.out.println("2. Return item.");
+                    System.out.println("3. Unsubscribe/Delete account.");
+                    System.out.println("4. Suspend member.");
+                    System.out.println("5. Quit");
+
+                    System.out.println("Select (1-5):");
+                    int selection2 = Integer.parseInt(scanner.nextLine());
+
+                    switch (selection2) {
+                        case 1: {
+                            // Lend an item
+                            System.out.println("Enter book ISBN:");
+                            String bookId = scanner.nextLine();
+                            svc.borrow(bookId, userId);  // Use existing userId
+                        }
+                        break;
+
+                        case 2: {
+                            // Return an item
+                            System.out.println("Enter book ISBN:");
+                            String bookId = scanner.nextLine();
+                            svc.returnBook(bookId, userId);  // Use existing userId
+                        }
+                        break;
+
+                        case 3: {
+                            // Unsubscribe/Delete account
+                            svc.deleteMember(userId);  // Use existing userId
+                        }
+                        break;
+
+                        case 4: {
+                            // Suspend a member
+                            svc.suspendMember(userId);  // Use existing userId
+                        }
+                        break;
+
+                        case 5: {
+                            done = true;
+                        }
+                        break;
+                    }
                 }
                 break;
 
-                case 3: {
-                    // Return an item
-                    System.out.println("Enter your user ID:");
-                    String userId = scanner.nextLine();
-                    System.out.println("Enter book ISBN:");
-                    String bookId = scanner.nextLine();
-                    svc.returnBook(bookId, userId);
-                }
-                break;
 
-                case 4: {
-                    // Unsubscribe/Delete account
-                    System.out.println("Enter your user ID:");
-                    String userId = scanner.nextLine();
-                    svc.deleteMember(userId);
-                }
-                break;
 
-                case 5: {
-                    // Suspend a member
-                    System.out.println("Enter the user ID to suspend:");
-                    String userId = scanner.nextLine();
-                    svc.suspendMember(userId);
-                }
-                break;
-
-                case 9: {
-                    done = true;
-                }
-                break;
 
                 default:
-                    System.out.println(String.format("%d is not a valid option.", selection));
+                    System.out.println(String.format("%d is not a valid option.", selection1));
+            }
             }
         }
-
-        System.out.println("Bye.");
     }
-}
