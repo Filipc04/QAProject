@@ -4,4 +4,6 @@ public class Book {
     public String ISBN;
     public String title;
     public int year;
+
+    private int availableCopies;
 }
