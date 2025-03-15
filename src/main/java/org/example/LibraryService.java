@@ -27,9 +27,9 @@ public class LibraryService {
         return store.borrowItem(bookId, memberId);
     }
 
-    public boolean returnBook(String bookId, String memberId) {
+    public boolean returnBook(String isbn, String memberId) {
         // Return the book
-        boolean success = store.returnItem(bookId, memberId);
+        boolean success = store.returnItem(isbn, memberId);
 
         if (success) {
             System.out.println("Book returned successfully.");
