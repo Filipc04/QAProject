@@ -1,7 +1,7 @@
 package org.example;
 
 import java.sql.*;
-
+import java.util.*;
 public class DbLibraryStore implements ILibraryStore {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/library_db";
     private static final String DB_USER = "root"; // Replace with your MySQL username
@@ -54,19 +54,29 @@ public class DbLibraryStore implements ILibraryStore {
 
     @Override
     public void addMember(Member newMember) {
-        String sql = "INSERT INTO Members (member_id, first_name, last_name, personal_number, level) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Members (first_name, last_name, member_id, personal_number, level) VALUES (?, ?, ?, ?, ?)";
+
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, newMember.id);
-            stmt.setString(2, newMember.firstName);
-            stmt.setString(3, newMember.lastName);
+
+            // Generate a 4-digit numeric ID for the member
+            newMember.id = String.format("%04d", new Random().nextInt(10000));
+
+            // Set parameters for the SQL statement
+            stmt.setString(1, newMember.firstName);
+            stmt.setString(2, newMember.lastName);
+            stmt.setString(3, newMember.id);
             stmt.setString(4, newMember.personalNumber);
             stmt.setInt(5, newMember.level);
+
             stmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
+
+
 
     @Override
     public Member getMember(String id) {
@@ -99,8 +109,8 @@ public class DbLibraryStore implements ILibraryStore {
             stmt.setString(1, id);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                Date suspendedUntil = rs.getDate("suspended_until");
-                return suspendedUntil != null && suspendedUntil.after(new Date(System.currentTimeMillis()));
+                java.sql.Date suspendedUntil = rs.getDate("suspended_until");
+                return suspendedUntil != null && suspendedUntil.after(new java.sql.Date(System.currentTimeMillis()));
             }
         } catch (SQLException e) {
             e.printStackTrace();
