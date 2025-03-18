@@ -57,6 +57,20 @@ public class LibraryService {
         return true;
     }
 
+    public boolean searchMember(String memberId) {
+        Member member = store.getMember(memberId);
+        if (member != null) {
+            System.out.println("Member found");
+            System.out.println("Id:" + memberId);
+            System.out.println("Name" + member.firstName + " " + member.lastName);
+            System.out.println("Suspended until:" + (member.suspendedUntil != null ? member.suspendedUntil : "Not suspended"));
+            return true;
+        } else {
+            System.out.println("No member found with Id:" + memberId);
+        }
+        return false;
+    }
+
     public boolean suspendMember(String memberId) {
         // Suspend the member
         store.suspendMember(memberId);

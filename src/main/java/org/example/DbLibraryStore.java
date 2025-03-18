@@ -236,4 +236,27 @@ public class DbLibraryStore implements ILibraryStore {
             return false;
         }
     }
+    public Member searchMemberById(String memberId) {
+        String sql = "SELECT * FROM Members WHERE member_id = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, memberId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                Member member = new Member();
+                member.id = rs.getString("member_id");
+                member.firstName = rs.getString("first_name");
+                member.lastName = rs.getString("last_name");
+                member.personalNumber = rs.getString("personal_number");
+                member.level = rs.getInt("level");
+                member.suspendedUntil = rs.getDate("suspended_until");
+                return member;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // Returnera null om medlemmen inte hittas
+    }
+
 }
