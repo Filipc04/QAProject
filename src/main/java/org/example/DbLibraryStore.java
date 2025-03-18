@@ -236,6 +236,7 @@ public class DbLibraryStore implements ILibraryStore {
             return false;
         }
     }
+
     public Member searchMemberById(String memberId) {
         String sql = "SELECT * FROM Members WHERE member_id = ?";
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
