@@ -93,5 +93,19 @@ class LibraryServiceTest {
         verify(mockStore).deleteMember("5678"); // ✅ This should now be called
     }
 
+    @Test
+    void testBorrowFailsIfBookUnavailable() {
+        // Given: A book that is unavailable
+        when(mockStore.isSuspendedMember("1234")).thenReturn(false);
+        when(mockStore.borrowItem("56789", "1234")).thenReturn(false); // Simulate that the book is not available
+
+        // When: The member tries to borrow the book
+        boolean result = libraryService.borrow("56789", "1234");
+
+        // Then: Borrowing should fail
+        assertFalse(result, "Member should not be able to borrow an unavailable book.");
+    }
+
+
 }
 

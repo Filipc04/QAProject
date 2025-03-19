@@ -12,5 +12,6 @@ public interface ILibraryStore {
     int getSuspensionCount(String memberId); // Returns how many times a member was suspended
     void recordSuspension(String memberId); // Logs a suspension in the database
     void deleteMember(String memberId); // Deletes the member after multiple suspensions
+    int getBorrowedItemsCount(String memberId);
 
 }

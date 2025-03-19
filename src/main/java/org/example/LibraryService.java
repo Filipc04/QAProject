@@ -109,9 +109,7 @@ public class LibraryService {
     }
 
     private int getBorrowedItemsCount(String memberId) {
-        // Implement logic to count the number of items borrowed by the member
-        // For now, return 0 (you can implement this later)
-        return 0;
+        return store.getBorrowedItemsCount(memberId); // ✅ Calls database method
     }
 
     public boolean memberExists(String userId) {
