@@ -7,11 +7,11 @@ public interface ILibraryStore {
     Member getMember(String id);
     boolean isSuspendedMember(String id);
     void suspendMember(String id);
-    boolean borrowItem(String itemId, String memberId); // Add this method
-    boolean returnItem(String itemId, String memberId); // Add this method
-    int getSuspensionCount(String memberId); // Returns how many times a member was suspended
-    void recordSuspension(String memberId); // Logs a suspension in the database
-    void deleteMember(String memberId); // Deletes the member after multiple suspensions
+    boolean borrowItem(String itemId, String memberId);
+    boolean returnItem(String itemId, String memberId);
+    int getSuspensionCount(String memberId); //returns how many times a member was suspended
+    void recordSuspension(String memberId); //logs a suspension in the database
+    void deleteMember(String memberId); //delete after multiple suspensions
     int getBorrowedItemsCount(String memberId);
 
 }

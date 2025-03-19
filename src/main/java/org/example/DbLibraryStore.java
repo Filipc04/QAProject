@@ -67,11 +67,41 @@ public class DbLibraryStore implements ILibraryStore {
 
     @Override
     public Member getMember(String id) {
+        String sql = "SELECT * FROM Members WHERE member_id = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                Member member = new Member();
+                member.id = rs.getString("member_id");
+                member.firstName = rs.getString("first_name");
+                member.lastName = rs.getString("last_name");
+                member.personalNumber = rs.getString("personal_number");
+                member.level = rs.getInt("level");
+                member.suspendedUntil = rs.getDate("suspended_until");
+                return member;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
     @Override
     public boolean isSuspendedMember(String id) {
+        String sql = "SELECT suspended_until FROM Members WHERE member_id = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                java.sql.Date suspendedUntil = rs.getDate("suspended_until");
+                return suspendedUntil != null && suspendedUntil.after(new java.sql.Date(System.currentTimeMillis()));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return false;
     }
 
@@ -107,7 +137,7 @@ public class DbLibraryStore implements ILibraryStore {
         String deleteMemberSQL = "DELETE FROM Members WHERE member_id = ?";
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
             try (PreparedStatement stmt1 = conn.prepareStatement(deleteBorrowingsSQL)) {
                 stmt1.setString(1, memberId);
@@ -180,8 +210,44 @@ public class DbLibraryStore implements ILibraryStore {
     }
 
     @Override
-    public boolean returnItem(String itemId, String memberId) {
-        return false;
+    public boolean returnItem(String isbn, String memberId) {
+        String findItemSql = "SELECT item_id FROM LibraryItems WHERE ISBN = ? LIMIT 1";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement findItemStmt = conn.prepareStatement(findItemSql)) {
+            findItemStmt.setInt(1, Integer.parseInt(isbn));
+            ResultSet rs = findItemStmt.executeQuery();
+
+            if (rs.next()) {
+                int itemId = rs.getInt("item_id");
+
+                String returnSql = "UPDATE Borrowings SET returned_date = CURDATE() " +
+                        "WHERE member_id = ? AND item_id = ? AND returned_date IS NULL";
+                try (PreparedStatement returnStmt = conn.prepareStatement(returnSql)) {
+                    returnStmt.setString(1, memberId);
+                    returnStmt.setInt(2, itemId);
+                    int rowsUpdated = returnStmt.executeUpdate();
+
+                    if (rowsUpdated > 0) {
+                        String updateSql = "UPDATE LibraryItems SET available = TRUE WHERE item_id = ?";
+                        try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                            updateStmt.setInt(1, itemId);
+                            updateStmt.executeUpdate();
+                        }
+
+                        return true;
+                    } else {
+                        System.out.println("No matching borrowing record found.");
+                        return false;
+                    }
+                }
+            } else {
+                System.out.println("No items found for the given ISBN.");
+                return false;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override
