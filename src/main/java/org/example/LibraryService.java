@@ -66,9 +66,14 @@ public class LibraryService {
         return false;
     }
 
-    public boolean suspendMember(String memberId) {
-        store.suspendMember(memberId);
-        System.out.println("Member suspended successfully.");
+    public boolean suspendMember(String memberId, int days) {
+        if (days <= 0) {
+            System.out.println("Error: Suspension duration must be at least 1 day.");
+            return false;
+        }
+
+        store.suspendMember(memberId, days); // ✅ Now passes the custom duration
+        System.out.println("Member suspended for " + days + " days.");
         return true;
     }
 
@@ -112,7 +117,10 @@ public class LibraryService {
         Member member = store.getMember(memberId);
         if (member == null) return;
 
-        member.lateReturns++;
+        if (store.wasReturnLate(memberId)) { // ✅ Only increase if return was actually late
+            member.lateReturns++;
+            System.out.println("Late returns for member " + memberId + ": " + member.lateReturns);
+        }
 
         System.out.println("Late returns for member " + memberId + ": " + member.lateReturns);
 
