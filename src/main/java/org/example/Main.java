@@ -75,6 +75,12 @@ public class Main {
                     System.out.println("Enter your user ID:");
                     String userId = scanner.nextLine(); // User stays logged in
 
+                    Member member = store.getMember(userId);
+                    if (member == null) {
+                        System.out.println("Error: No member found with this ID. Please try again.");
+                        break;
+                    }
+
                     boolean loggedIn = true;
                     while (loggedIn) {  // Keep user logged in until they choose to log out
                         int selection2 = 0;

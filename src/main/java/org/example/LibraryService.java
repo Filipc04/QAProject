@@ -111,4 +111,8 @@ public class LibraryService {
         // For now, return 0 (you can implement this later)
         return 0;
     }
+
+    public boolean memberExists(String userId) {
+        return store.getMember(userId) != null; // Check if user exists in the database
+    }
 }
