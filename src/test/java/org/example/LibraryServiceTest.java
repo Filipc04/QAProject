@@ -65,5 +65,33 @@ class LibraryServiceTest {
 
         assertFalse(exists, "Member should not exist.");
     }
+
+    @Test
+    void testMemberGetsSuspendedAfterTwoLateReturns() {
+        when(mockStore.getMember("1234")).thenReturn(new Member());
+        when(mockStore.getSuspensionCount("1234")).thenReturn(0); // No prior suspensions
+
+        // Simulate two late returns
+        libraryService.checkLateReturnsAndSuspend("1234");
+        libraryService.checkLateReturnsAndSuspend("1234");
+
+        // Verify that the member was suspended
+        verify(mockStore).recordSuspension("1234");
+    }
+
+    @Test
+    void testMemberGetsDeletedAfterTwoSuspensions() {
+        Member testMember = new Member();
+        testMember.id = "5678";
+        testMember.lateReturns = 2; // Simulate that the user already has 2 late returns
+
+        when(mockStore.getMember("5678")).thenReturn(testMember);
+        when(mockStore.getSuspensionCount("5678")).thenReturn(1); // Simulate 1 existing suspension
+
+        libraryService.checkLateReturnsAndSuspend("5678");
+
+        verify(mockStore).deleteMember("5678"); // ✅ This should now be called
+    }
+
 }
 

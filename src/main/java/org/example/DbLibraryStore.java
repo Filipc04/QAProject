@@ -2,6 +2,8 @@ package org.example;
 
 import java.sql.*;
 import java.util.*;
+import java.sql.Date;
+
 public class DbLibraryStore implements ILibraryStore {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/library_db";
     private static final String DB_USER = "root"; // Replace with your MySQL username
@@ -116,12 +118,27 @@ public class DbLibraryStore implements ILibraryStore {
     }
 
     @Override
-    public void removeMember(String id) {
-        String sql = "DELETE FROM Members WHERE member_id = ?";
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, id);
-            stmt.executeUpdate();
+    public void deleteMember(String memberId) {
+        String deleteBorrowingsSQL = "DELETE FROM Borrowings WHERE member_id = ?";
+        String deleteMemberSQL = "DELETE FROM Members WHERE member_id = ?";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            conn.setAutoCommit(false); // Start a transaction
+
+            // Step 1: Delete all borrow records (even if the book was returned)
+            try (PreparedStatement stmt1 = conn.prepareStatement(deleteBorrowingsSQL)) {
+                stmt1.setString(1, memberId);
+                stmt1.executeUpdate();
+            }
+
+            // Step 2: Delete the member
+            try (PreparedStatement stmt2 = conn.prepareStatement(deleteMemberSQL)) {
+                stmt2.setString(1, memberId);
+                stmt2.executeUpdate();
+            }
+
+            conn.commit(); // Commit both deletions
+            System.out.println("Member " + memberId + " has been deleted successfully.");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -256,5 +273,38 @@ public class DbLibraryStore implements ILibraryStore {
         }
         return null; // Returnera null om medlemmen inte hittas
     }
+
+    @Override
+    public int getSuspensionCount(String memberId) {
+        String sql = "SELECT COUNT(*) FROM suspensions WHERE member_id = ?";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, memberId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    @Override
+    public void recordSuspension(String memberId) {
+        String sql = "INSERT INTO suspensions (member_id, suspension_start, suspension_end) VALUES (?, ?, ?)";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, memberId);
+            stmt.setDate(2, new Date(System.currentTimeMillis())); // Suspension starts now
+            stmt.setDate(3, new Date(System.currentTimeMillis() + (15L * 24 * 60 * 60 * 1000))); // Ends in 15 days
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 }
