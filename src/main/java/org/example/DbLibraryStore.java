@@ -306,5 +306,23 @@ public class DbLibraryStore implements ILibraryStore {
         }
     }
 
+    @Override
+    public int getBorrowedItemsCount(String memberId) {
+        String sql = "SELECT COUNT(*) FROM borrowings WHERE member_id = ? AND returned_date IS NULL"; // ✅ Ensures only active borrowings are counted
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, memberId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1); // ✅ Returns correct borrowed book count
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0; // Default to 0 if query fails
+    }
+
+
 
 }
