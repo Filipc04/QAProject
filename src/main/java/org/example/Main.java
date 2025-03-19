@@ -120,6 +120,7 @@ public class Main {
                                 System.out.println("Enter book ISBN:");
                                 String bookId = scanner.nextLine();
                                 svc.returnBook(bookId, userId);
+                                svc.checkLateReturnsAndSuspend(userId);
                             }
                             break;
 

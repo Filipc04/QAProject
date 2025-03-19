@@ -1,6 +1,8 @@
 package org.example;
 
 import java.util.UUID;
+import java.sql.Date;
+
 
 public class LibraryService {
 
@@ -52,7 +54,7 @@ public class LibraryService {
 
     public boolean deleteMember(String memberId) {
         // Delete the member
-        store.removeMember(memberId);
+        store.deleteMember(memberId);
         System.out.println("Member deleted successfully.");
         return true;
     }
@@ -115,4 +117,31 @@ public class LibraryService {
     public boolean memberExists(String userId) {
         return store.getMember(userId) != null; // Check if user exists in the database
     }
+
+    public void checkLateReturnsAndSuspend(String memberId) {
+        Member member = store.getMember(memberId);
+        if (member == null) return;
+
+        member.lateReturns++;
+
+        System.out.println("Late returns for member " + memberId + ": " + member.lateReturns); // ✅ Debugging line
+
+        if (member.lateReturns >= 2) {
+            member.suspendedUntil = new Date(System.currentTimeMillis() + (15L * 24 * 60 * 60 * 1000));
+            member.lateReturns = 0; // Reset late return count
+
+            int suspensions = store.getSuspensionCount(memberId);
+            System.out.println("Current suspensions: " + suspensions); // ✅ Debugging line
+
+            store.recordSuspension(memberId);
+
+            if (suspensions + 1 >= 2) {
+                store.deleteMember(memberId);
+                System.out.println("Member " + memberId + " has been deleted due to repeated suspensions."); // ✅ Debugging line
+            } else {
+                System.out.println("Member " + memberId + " has been suspended for 15 days due to late returns.");
+            }
+        }
+    }
+
 }
