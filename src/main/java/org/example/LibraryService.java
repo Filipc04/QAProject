@@ -13,24 +13,20 @@ public class LibraryService {
     }
 
     public boolean borrow(String bookId, String memberId) {
-        // Check if the member is suspended
         if (store.isSuspendedMember(memberId)) {
             System.out.println("This member is suspended and cannot borrow books.");
             return false;
         }
 
-        // Check if the member has reached their borrowing limit
         if (!canBorrowMoreItems(memberId)) {
             System.out.println("This member has reached their borrowing limit.");
             return false;
         }
 
-        // Borrow the book
         return store.borrowItem(bookId, memberId);
     }
 
     public boolean returnBook(String isbn, String memberId) {
-        // Return the book
         boolean success = store.returnItem(isbn, memberId);
 
         if (success) {
@@ -43,17 +39,14 @@ public class LibraryService {
     }
 
     public boolean registerMember(Member newMember) {
-        // Generate a unique ID for the member (e.g., using UUID or a sequence)
-        newMember.id = UUID.randomUUID().toString().substring(0, 4); // Example: 4-character ID
+        newMember.id = UUID.randomUUID().toString().substring(0, 4);
 
-        // Add the member to the database
         store.addMember(newMember);
         System.out.println("Registration successful! Your user ID is: " + newMember.id);
         return true;
     }
 
     public boolean deleteMember(String memberId) {
-        // Delete the member
         store.deleteMember(memberId);
         System.out.println("Member deleted successfully.");
         return true;
@@ -74,16 +67,15 @@ public class LibraryService {
     }
 
     public boolean suspendMember(String memberId) {
-        // Suspend the member
         store.suspendMember(memberId);
         System.out.println("Member suspended successfully.");
         return true;
     }
 
-    private boolean canBorrowMoreItems(String memberId) {
+    public boolean canBorrowMoreItems(String memberId) {
         Member member = store.getMember(memberId);
         if (member == null) {
-            return false; // Member not found
+            return false;
         }
 
         int maxItems;
@@ -109,11 +101,11 @@ public class LibraryService {
     }
 
     private int getBorrowedItemsCount(String memberId) {
-        return store.getBorrowedItemsCount(memberId); // ✅ Calls database method
+        return store.getBorrowedItemsCount(memberId);
     }
 
     public boolean memberExists(String userId) {
-        return store.getMember(userId) != null; // Check if user exists in the database
+        return store.getMember(userId) != null;
     }
 
     public void checkLateReturnsAndSuspend(String memberId) {
@@ -122,20 +114,20 @@ public class LibraryService {
 
         member.lateReturns++;
 
-        System.out.println("Late returns for member " + memberId + ": " + member.lateReturns); // ✅ Debugging line
+        System.out.println("Late returns for member " + memberId + ": " + member.lateReturns);
 
         if (member.lateReturns >= 2) {
             member.suspendedUntil = new Date(System.currentTimeMillis() + (15L * 24 * 60 * 60 * 1000));
-            member.lateReturns = 0; // Reset late return count
+            member.lateReturns = 0;
 
             int suspensions = store.getSuspensionCount(memberId);
-            System.out.println("Current suspensions: " + suspensions); // ✅ Debugging line
+            System.out.println("Current suspensions: " + suspensions);
 
             store.recordSuspension(memberId);
 
             if (suspensions + 1 >= 2) {
                 store.deleteMember(memberId);
-                System.out.println("Member " + memberId + " has been deleted due to repeated suspensions."); // ✅ Debugging line
+                System.out.println("Member " + memberId + " has been deleted due to repeated suspensions.");
             } else {
                 System.out.println("Member " + memberId + " has been suspended for 15 days due to late returns.");
             }
