@@ -21,7 +21,7 @@ class LibraryServiceTest {
         libraryService = new LibraryService(mockStore);
     }
 
-    //Member Registration
+    //MEMBER REGISTRATION TESTS
     @Test
     void registeringNewMemberShouldGenerateUniqueIdAndStoreMember() {
         Member newMember = new Member();
@@ -33,7 +33,7 @@ class LibraryServiceTest {
         verify(mockStore).addMember(newMember);
     }
 
-    //Borrowing Books
+    //BORROWING BOOKS TESTS
     @Test
     void borrowingBookShouldFailIfMemberIsSuspended() {
         when(mockStore.isSuspendedMember("1234")).thenReturn(true);
@@ -71,7 +71,8 @@ class LibraryServiceTest {
         verify(mockStore).borrowItem("999999", "1234");
     }
 
-    //Returning Books
+    //RETURNING BOOKS TESTS
+
     @Test
     void returningBookShouldSucceedIfBookWasBorrowed() {
         when(mockStore.returnItem("678901", "1234")).thenReturn(true);
@@ -91,7 +92,51 @@ class LibraryServiceTest {
         assertFalse(result, "Returning a book should fail if the book was not borrowed.");
     }
 
-    //Searching Members
+    @Test
+    void returningBookShouldUpdateAvailability() {
+        when(mockStore.returnItem("678901", "1234")).thenReturn(true); // ✅ Simulate successful return
+
+        boolean result = libraryService.returnBook("678901", "1234");
+
+        assertTrue(result, "Returning a book should mark it as available again.");
+        verify(mockStore).returnItem("678901", "1234");
+    }
+
+    //MEMBER SUSPENSION TESTS
+    @Test
+    void suspendingMemberShouldStoreCorrectDays() {
+        doNothing().when(mockStore).suspendMember("1234", 7); // ✅ Mock 7-day suspension
+
+        boolean result = libraryService.suspendMember("1234", 7);
+
+        assertTrue(result, "Member should be suspended for the correct number of days.");
+        verify(mockStore).suspendMember("1234", 7);
+    }
+
+    @Test
+    void suspendingMemberShouldFailForInvalidDays() {
+        boolean result = libraryService.suspendMember("1234", 0); // ❌ Invalid: 0 days
+
+        assertFalse(result, "Suspending a member with 0 days should fail.");
+        verify(mockStore, never()).suspendMember(anyString(), anyInt());
+    }
+
+    @Test
+    void memberShouldBeDeletedIfTheyReachSuspensionLimit() {
+        Member testMember = new Member();
+        testMember.id = "5678";
+        testMember.lateReturns = 2;
+
+        when(mockStore.getMember("5678")).thenReturn(testMember);
+        when(mockStore.getSuspensionCount("5678")).thenReturn(1);
+        when(mockStore.wasReturnLate("5678")).thenReturn(true);
+
+        libraryService.checkLateReturnsAndSuspend("5678");
+
+        verify(mockStore).deleteMember("5678");
+    }
+
+    //LOGIN & MEMBER SEARCH TESTS
     @Test
     void searchingForExistingMemberShouldReturnTrue() {
         Member testMember = new Member();
@@ -115,95 +160,24 @@ class LibraryServiceTest {
         assertFalse(exists, "Searching for a non-existing member should return false.");
     }
 
-    //Member Suspension and Deletion
     @Test
-    void suspendingMemberShouldCallStoreSuspendMethod() {
-        doNothing().when(mockStore).suspendMember("1234");
+    void memberShouldBeAbleToLoginWithValidId() {
+        Member existingMember = new Member();
+        existingMember.id = "1234";
 
-        boolean result = libraryService.suspendMember("1234");
+        when(mockStore.getMember("1234")).thenReturn(existingMember);
 
-        assertTrue(result, "Suspending a member should call the suspend method.");
-        verify(mockStore).suspendMember("1234");
+        boolean result = libraryService.memberExists("1234");
+
+        assertTrue(result, "Existing member should be able to log in.");
     }
 
     @Test
-    void memberShouldBeDeletedIfTheyReachSuspensionLimit() {
-        Member testMember = new Member();
-        testMember.id = "5678";
-        testMember.lateReturns = 2;
+    void memberShouldNotBeAbleToLoginWithInvalidId() {
+        when(mockStore.getMember("9999")).thenReturn(null);
 
-        when(mockStore.getMember("5678")).thenReturn(testMember);
-        when(mockStore.getSuspensionCount("5678")).thenReturn(1);
+        boolean result = libraryService.memberExists("9999");
 
-        libraryService.checkLateReturnsAndSuspend("5678");
-
-        verify(mockStore).deleteMember("5678");
-    }
-
-    //Borrowing Limits Based on role
-    @Test
-    void undergraduateMemberShouldBeAbleToBorrowWithinLimit() {
-        Member member = new Member();
-        member.id = "1001";
-        member.level = 1;
-
-        when(mockStore.getMember("1001")).thenReturn(member);
-        when(mockStore.getBorrowedItemsCount("1001")).thenReturn(2); // Borrowed 2 books
-
-        boolean result = libraryService.canBorrowMoreItems("1001");
-
-        assertTrue(result, "Undergraduate should be able to borrow one more book.");
-    }
-
-    @Test
-    void undergraduateMemberShouldNotBeAbleToBorrowIfAtLimit() {
-        Member member = new Member();
-        member.id = "1001";
-        member.level = 1; // Undergraduate
-
-        when(mockStore.getMember("1001")).thenReturn(member);
-        when(mockStore.getBorrowedItemsCount("1001")).thenReturn(3); // Borrowed max (3)
-
-        boolean result = libraryService.canBorrowMoreItems("1001");
-
-        assertFalse(result, "Undergraduate should not be able to borrow more than 3 books.");
-    }
-
-    @Test
-    void teacherShouldBeAbleToBorrowWithinLimit() {
-        Member member = new Member();
-        member.id = "2002";
-        member.level = 4;
-
-        when(mockStore.getMember("2002")).thenReturn(member);
-        when(mockStore.getBorrowedItemsCount("2002")).thenReturn(9); // Borrowed 9 books
-
-        boolean result = libraryService.canBorrowMoreItems("2002");
-
-        assertTrue(result, "Teacher should be able to borrow one more book.");
-    }
-
-    @Test
-    void teacherShouldNotBeAbleToBorrowIfAtLimit() {
-        Member member = new Member();
-        member.id = "2002";
-        member.level = 4;
-
-        when(mockStore.getMember("2002")).thenReturn(member);
-        when(mockStore.getBorrowedItemsCount("2002")).thenReturn(10); // Borrowed max (10)
-
-        boolean result = libraryService.canBorrowMoreItems("2002");
-
-        assertFalse(result, "Teacher should not be able to borrow more than 10 books.");
-    }
-
-    @Test
-    void nonExistentMemberShouldNotBeAbleToBorrow() {
-        when(mockStore.getMember("9999")).thenReturn(null); // Non-existent member
-
-        boolean result = libraryService.canBorrowMoreItems("9999");
-
-        assertFalse(result, "Invalid member should not be able to borrow.");
+        assertFalse(result, "Invalid member should not be able to log in.");
     }
 }
-

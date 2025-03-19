@@ -73,7 +73,7 @@ public class Main {
                 case 2: {
                     // Login process
                     System.out.println("Enter your user ID:");
-                    String userId = scanner.nextLine(); // User stays logged in
+                    String userId = scanner.nextLine();
 
                     Member member = store.getMember(userId);
                     if (member == null) {
@@ -82,7 +82,7 @@ public class Main {
                     }
 
                     boolean loggedIn = true;
-                    while (loggedIn) {  // Keep user logged in until they choose to log out
+                    while (loggedIn) {
                         int selection2 = 0;
                         boolean validSelection = false;
                         while (!validSelection) {
@@ -109,36 +109,117 @@ public class Main {
                         switch (selection2) {
                             case 1: {
                                 // Lend an item
-                                System.out.println("Enter book ISBN:");
-                                String bookId = scanner.nextLine();
-                                svc.borrow(bookId, userId);
+                                boolean lending = true;
+                                while (lending) {
+                                    if (!svc.canBorrowMoreItems(userId)) { // ✅ Check borrow limit before allowing another book
+                                        System.out.println("You have reached your borrowing limit. Returning to the user menu.");
+                                        break; // ✅ Exit the loop if limit is reached
+                                    }
+
+                                    System.out.println("Enter book ISBN:");
+                                    String bookId = scanner.nextLine();
+
+                                    boolean success = svc.borrow(bookId, userId); // ✅ Ensure book was successfully borrowed
+
+                                    if (success) { // ✅ Only ask for another book if borrowing succeeded
+                                        System.out.println("\nDo you want to:");
+                                        System.out.println("1. Lend another book.");
+                                        System.out.println("2. Return to the user menu.");
+                                        System.out.print("Select (1-2): ");
+
+                                        int choice = 0;
+                                        boolean validChoice = false;
+                                        while (!validChoice) {
+                                            try {
+                                                choice = Integer.parseInt(scanner.nextLine().trim());
+                                                if (choice == 1 || choice == 2) {
+                                                    validChoice = true;
+                                                } else {
+                                                    System.out.println("Please enter 1 to lend another book or 2 to return to the user menu.");
+                                                }
+                                            } catch (NumberFormatException e) {
+                                                System.out.println("Invalid input! Please enter 1 or 2.");
+                                            }
+                                        }
+
+                                        if (choice == 2) {
+                                            lending = false; // ✅ Exit loop and return to user menu
+                                        }
+                                    } else {
+                                        System.out.println("Book could not be borrowed. Returning to the user menu.");
+                                        lending = false; // ✅ Exit loop if borrowing fails
+                                    }
+                                }
+
                             }
                             break;
 
                             case 2: {
                                 // Return an item
-                                System.out.println("Enter book ISBN:");
-                                String bookId = scanner.nextLine();
-                                svc.returnBook(bookId, userId);
-                                svc.checkLateReturnsAndSuspend(userId);
+                                boolean returning = true;
+                                while (returning) {
+                                    System.out.println("Enter book ISBN:");
+                                    String bookId = scanner.nextLine();
+                                    svc.returnBook(bookId, userId);
+                                    svc.checkLateReturnsAndSuspend(userId);
+
+                                    System.out.println("\nDo you want to:");
+                                    System.out.println("1. Return another book.");
+                                    System.out.println("2. Return to the user menu.");
+                                    System.out.print("Select (1-2): ");
+
+                                    int choice = 0;
+                                    boolean validChoice = false;
+                                    while (!validChoice) {
+                                        try {
+                                            choice = Integer.parseInt(scanner.nextLine().trim());
+                                            if (choice == 1 || choice == 2) {
+                                                validChoice = true;
+                                            } else {
+                                                System.out.println("Please enter 1 to return another book or 2 to return to the user menu.");
+                                            }
+                                        } catch (NumberFormatException e) {
+                                            System.out.println("Invalid input! Please enter 1 or 2.");
+                                        }
+                                    }
+
+                                    if (choice == 2) {
+                                        returning = false;
+                                    }
+                                }
                             }
                             break;
 
                             case 3: {
                                 // Unsubscribe/Delete account
                                 svc.deleteMember(userId);
-                                loggedIn = false;  // Log out after deleting account
+                                loggedIn = false;
                             }
                             break;
 
                             case 4: {
-                                // Suspend a member
-                                svc.suspendMember(userId);
+                                System.out.println("Enter the number of days to suspend the member:");
+                                int days = 0;
+                                boolean validDays = false;
+                                while (!validDays) {
+                                    try {
+                                        days = Integer.parseInt(scanner.nextLine().trim());
+                                        if (days > 0) {
+                                            validDays = true;
+                                        } else {
+                                            System.out.println("Please enter a valid number of days (must be at least 1).");
+                                        }
+                                    } catch (NumberFormatException e) {
+                                        System.out.println("Invalid input! Please enter a valid number.");
+                                    }
+                                }
+
+                                svc.suspendMember(userId, days); // ✅ Now passes the chosen duration
                             }
                             break;
 
                             case 5: {
-                                loggedIn = false;  // Log out and return to Main Menu
+                                loggedIn = false;
                             }
                             break;
                         }
@@ -147,8 +228,7 @@ public class Main {
                 break;
 
                 case 3: {
-                    done = true;  // Quit the program
-                    System.out.println("Goodbye!");
+                    done = true;
                 }
                 break;
             }

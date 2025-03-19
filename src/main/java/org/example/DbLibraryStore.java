@@ -106,26 +106,49 @@ public class DbLibraryStore implements ILibraryStore {
     }
 
     @Override
-    public void suspendMember(String id) {
-
-    }
-
-    @Override
-    public void addMember(Member newMember) {
-        String sql = "INSERT INTO Members (first_name, last_name, member_id, personal_number, level) VALUES (?, ?, ?, ?, ?)";
+    public void suspendMember(String id, int days) { // ✅ Now accepts suspension duration
+        String sql = "UPDATE Members SET suspended_until = ? WHERE member_id = ?";
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            newMember.id = String.format("%04d", new Random().nextInt(10000));
-            stmt.setString(1, newMember.firstName);
-            stmt.setString(2, newMember.lastName);
-            stmt.setString(3, newMember.id);
-            stmt.setString(4, newMember.personalNumber);
-            stmt.setInt(5, newMember.level);
-
+            stmt.setDate(1, new Date(System.currentTimeMillis() + (days * 24L * 60 * 60 * 1000))); // ✅ Custom days
+            stmt.setString(2, id);
             stmt.executeUpdate();
-            logger.info("Member '{}' {} added with ID {}", newMember.firstName, newMember.lastName, newMember.id);
+
+            logger.info("Member {} has been suspended for {} days.", id, days);
+        } catch (SQLException e) {
+            logger.error("Failed to suspend member {}", id, e);
+        }
+    }
+
+    @Override
+    public void addMember(Member newMember) {
+        String checkSql = "SELECT COUNT(*) FROM Members WHERE personal_number = ?";
+        String insertSql = "INSERT INTO Members (first_name, last_name, member_id, personal_number, level) VALUES (?, ?, ?, ?, ?)";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+
+            checkStmt.setString(1, newMember.personalNumber);
+            ResultSet rs = checkStmt.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                System.out.println("Error: A member with this personal number already exists. Registration failed.");
+                return; // ✅ Prevent adding duplicate members
+            }
+
+            try (PreparedStatement stmt = conn.prepareStatement(insertSql)) {
+                newMember.id = String.format("%04d", new Random().nextInt(10000));
+                stmt.setString(1, newMember.firstName);
+                stmt.setString(2, newMember.lastName);
+                stmt.setString(3, newMember.id);
+                stmt.setString(4, newMember.personalNumber);
+                stmt.setInt(5, newMember.level);
+
+                stmt.executeUpdate();
+                logger.info("Member '{}' {} added with ID {}", newMember.firstName, newMember.lastName, newMember.id);
+            }
+
         } catch (SQLException e) {
             logger.error("Failed to add member '{} {}'", newMember.firstName, newMember.lastName, e);
         }
@@ -283,5 +306,31 @@ public class DbLibraryStore implements ILibraryStore {
         } catch (SQLException e) {
             logger.error("Failed to record suspension for member {}", memberId, e);
         }
+    }
+
+    @Override
+    public boolean wasReturnLate(String memberId) {
+        String sql = "SELECT borrowed_date FROM Borrowings WHERE member_id = ? AND returned_date = CURDATE()";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, memberId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                Date borrowedDate = rs.getDate("borrowed_date");
+                Date today = new Date(System.currentTimeMillis());
+
+                // ✅ If the book was borrowed more than 15 days ago, return true (late return)
+                long diffInMillis = today.getTime() - borrowedDate.getTime();
+                long daysBorrowed = diffInMillis / (1000 * 60 * 60 * 24);
+
+                return daysBorrowed > 15; // ✅ Late return if more than 15 days
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to check late return status for member {}", memberId, e);
+        }
+        return false; // ✅ Default to false if we can't determine late status
     }
 }
