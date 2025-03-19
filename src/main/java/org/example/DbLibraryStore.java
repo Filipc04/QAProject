@@ -75,9 +75,6 @@ public class DbLibraryStore implements ILibraryStore {
         }
     }
 
-
-
-
     @Override
     public Member getMember(String id) {
         String sql = "SELECT * FROM Members WHERE member_id = ?";

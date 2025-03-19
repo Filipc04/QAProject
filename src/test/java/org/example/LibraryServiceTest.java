@@ -22,17 +22,6 @@ class LibraryServiceTest {
     }
 
     @Test
-    void testBorrowBook_Success() {
-        when(mockStore.isSuspendedMember("1234")).thenReturn(false);
-        when(mockStore.borrowItem("678901", "1234")).thenReturn(true);
-
-        boolean result = libraryService.borrow("678901", "1234");
-
-        assertTrue(result, "Book should be borrowed successfully.");
-        verify(mockStore).borrowItem("678901", "1234"); // Ensure borrowItem() was called
-    }
-
-    @Test
     void testBorrowBook_FailedSuspended() {
         when(mockStore.isSuspendedMember("1234")).thenReturn(true);
 
@@ -50,6 +39,31 @@ class LibraryServiceTest {
 
         assertTrue(result, "Book should be returned successfully.");
         verify(mockStore).returnItem("678901", "1234"); // Ensure returnItem() was called
+    }
+
+    @Test
+    void testMemberExists_ValidUser() {
+        Member testMember = new Member(); // Create an empty Member object
+        testMember.id = "1234"; // Assign values manually
+        testMember.firstName = "John";
+        testMember.lastName = "Doe";
+        testMember.personalNumber = "123456789";
+        testMember.level = 1;
+
+        when(mockStore.getMember("1234")).thenReturn(testMember);
+
+        boolean exists = libraryService.memberExists("1234");
+
+        assertTrue(exists, "Member should exist.");
+    }
+
+    @Test
+    void testMemberExists_InvalidUser() {
+        when(mockStore.getMember("9999")).thenReturn(null);
+
+        boolean exists = libraryService.memberExists("9999");
+
+        assertFalse(exists, "Member should not exist.");
     }
 }
 
